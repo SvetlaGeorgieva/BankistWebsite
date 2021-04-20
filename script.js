@@ -10,6 +10,7 @@ const nav = document.querySelector(".nav");
 const tabs = document.querySelectorAll(".operations__tab");
 const tabContainer = document.querySelector(".operations__tab-container");
 const tabsContent = document.querySelectorAll(".operations__content");
+const allSections = document.querySelectorAll(".section");
 
 ///////////////////////////////////////
 // Modal window
@@ -98,7 +99,7 @@ const headerObserver = new IntersectionObserver(stickyNav, {
 });
 headerObserver.observe(header);
 
-/////////////////////////////////////////
+///////////////////////////////////////
 // Tabbed component
 
 tabContainer.addEventListener("click", function (e) {
@@ -120,3 +121,52 @@ tabContainer.addEventListener("click", function (e) {
     .querySelector(`.operations__content--${clicked.dataset.tab}`)
     .classList.add("operations__content--active");
 });
+
+///////////////////////////////////////
+// Reveal sections
+const revealSection = function (entries, observer) {
+  const [entry] = entries;
+
+  // Guard clause
+  if (!entry.isIntersecting) return;
+
+  entry.target.classList.remove("section--hidden");
+  observer.unobserve(entry.target);
+};
+
+const sectionObserver = new IntersectionObserver(revealSection, {
+  root: null,
+  threshold: 0.15,
+});
+
+allSections.forEach(function (section) {
+  sectionObserver.observe(section);
+  section.classList.add("section--hidden"); // at first all sections will be hidden
+});
+
+///////////////////////////////////////
+// Lazy loading images
+// -> select all images with html attribute data-src
+const imgTargets = document.querySelectorAll("img[data-src]");
+
+const loadImg = function (entries, observer) {
+  const [entry] = entries;
+
+  if (!entry.isIntersecting) return;
+
+  // Replace src with data-src
+  entry.target.src = entry.target.dataset.src; // <- when the loading of the image is finished, JS will emit a load event
+  entry.target.addEventListener("load", function () {
+    entry.target.classList.remove("lazy-img");
+  });
+
+  observer.unobserve(entry.target);
+};
+
+const imgObserver = new IntersectionObserver(loadImg, {
+  root: null,
+  threshold: 0,
+  rootMargin: "200px",
+});
+
+imgTargets.forEach((img) => imgObserver.observe(img));
